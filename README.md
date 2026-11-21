@@ -13,7 +13,7 @@ python scaffold.py
 - [x] **1.** gold_score
 - [x] **2.** make_demos
 - [x] **3.** encode_example
-- [ ] **4.** TinyLM
+- [x] **4.** TinyLM
 - [ ] **5.** sft_loss
 - [ ] **6.** instruction_tune
 - [ ] **7.** make_preference_pairs

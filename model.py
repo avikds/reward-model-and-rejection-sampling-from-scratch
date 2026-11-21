@@ -539,8 +539,69 @@ def train_reward_model(rm, pairs, steps, batch_size=64, lr=5e-3, seed=0):
 
     return losses
 
-# Step 11 - sample_completions (not yet solved)
-# TODO: implement
+# Step 11 - sample_completions
+def sample_completions(model, prompt, n, temperature=1.0, generator=None):
+    """n completions of len(prompt) tokens each, sampled token by token; temperature 0 is greedy."""
+
+    # Switch the model to evaluation mode.
+    model.eval()
+
+    # Determine the model's device.
+    # Parameter-free models should also be supported.
+    parameter = next(model.parameters(), None)
+
+    if parameter is not None:
+        device = parameter.device
+    else:
+        buffer = next(model.buffers(), None)
+        device = buffer.device if buffer is not None else torch.device("cpu")
+
+    # Encode the prompt using the existing chat template.
+    prompt_ids = encode_example(prompt)[0]
+
+    # Create n identical copies of the encoded prompt.
+    ids = torch.tensor(
+        [prompt_ids] * n,
+        dtype=torch.long,
+        device=device
+    )
+
+    # Generate exactly len(prompt) new tokens without computing gradients.
+    with torch.no_grad():
+        for _ in range(len(prompt)):
+
+            # Run the model on the complete sequences generated so far.
+            # Only the logits at the last position are needed.
+            logits = model(ids)[:, -1, :]
+
+            if temperature == 0:
+                # Greedy decoding: select the token with the highest logit.
+                next_ids = logits.argmax(dim=-1, keepdim=True)
+
+            else:
+                # Apply temperature scaling before calculating probabilities.
+                probs = F.softmax(logits / temperature, dim=-1)
+
+                # Sample one new token independently for each sequence.
+                next_ids = torch.multinomial(
+                    probs,
+                    num_samples=1,
+                    generator=generator
+                )
+
+            # Append the sampled tokens so they become input to the next step.
+            ids = torch.cat([ids, next_ids], dim=1)
+
+    # Extract only the generated tokens, excluding the original prompt.
+    completion_ids = ids[:, len(prompt_ids):]
+
+    # Convert token IDs back into character strings.
+    completions = [
+        "".join(CHARS[token_id] for token_id in row.tolist())
+        for row in completion_ids
+    ]
+
+    return completions
 
 # Step 12 - best_of_n (not yet solved)
 # TODO: implement

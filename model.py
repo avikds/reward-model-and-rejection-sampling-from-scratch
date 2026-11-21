@@ -401,8 +401,61 @@ def make_preference_pairs(n, seed, length=4, p_copy=0.6, p_typo=0.05):
 
     return pairs
 
-# Step 8 - RewardModel (not yet solved)
-# TODO: implement
+# Step 8 - RewardModel
+class RewardModel(nn.Module):
+    def __init__(self, vocab_size, d_model=32, n_head=2, n_layer=2, max_len=16):
+        """self.body: a TinyLM. self.head: a linear layer from d_model to one number."""
+
+        super().__init__()
+
+        # Create a new transformer backbone with its own independent weights.
+        self.body = TinyLM(
+            vocab_size,
+            d_model,
+            n_head,
+            n_layer,
+            max_len
+        )
+
+        # Predict one scalar reward from the final hidden state.
+        self.head = nn.Linear(d_model, 1)
+
+    def forward(self, ids):
+        """(B, T) token ids -> (B,) rewards, read from the hidden state at the last position."""
+
+        # Extract the hidden states from the transformer backbone.
+        hidden_states = self.body.hidden(ids)
+
+        # Select the hidden state at the final sequence position.
+        last_hidden = hidden_states[:, -1, :]
+
+        # Convert the final hidden state into a scalar reward.
+        rewards = self.head(last_hidden)
+
+        # Remove the final singleton dimension to obtain shape (B,).
+        return rewards.squeeze(-1)
+
+    def score(self, prompts, completions):
+        """Lists of strings -> (len(prompts),) rewards, with gradients."""
+
+        # Encode every prompt-completion pair using the existing chat template.
+        encoded = [
+            encode_example(prompt, completion)[0]
+            for prompt, completion in zip(prompts, completions)
+        ]
+
+        # Stack token IDs into a single batch tensor.
+        # Keep the tensor on the same device as the reward model.
+        device = next(self.parameters()).device
+
+        ids = torch.tensor(
+            encoded,
+            dtype=torch.long,
+            device=device
+        )
+
+        # Return reward scores without disabling gradient computation.
+        return self.forward(ids)
 
 # Step 9 - pairwise_loss (not yet solved)
 # TODO: implement

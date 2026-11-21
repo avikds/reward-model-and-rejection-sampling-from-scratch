@@ -11,7 +11,7 @@ python scaffold.py
 ## Steps
 
 - [x] **1.** gold_score
-- [ ] **2.** make_demos
+- [x] **2.** make_demos
 - [ ] **3.** encode_example
 - [ ] **4.** TinyLM
 - [ ] **5.** sft_loss

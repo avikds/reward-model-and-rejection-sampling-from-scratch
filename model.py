@@ -27,8 +27,52 @@ def gold_score(prompt, completion):
 
     return matching_positions / denominator
 
-# Step 2 - make_demos (not yet solved)
-# TODO: implement
+# Step 2 - make_demos
+import random
+
+
+def write_answer(prompt, rng, p_copy=0.6, p_typo=0.05):
+    """One answer from a writer who, at each position, copies the prompt's letter with probability p_copy and mistypes with probability p_typo."""
+
+    answer = []
+
+    for i in range(len(prompt)):
+        # First decide whether to copy the original letter or reverse it.
+        if rng.random() < p_copy:
+            char = prompt[i]
+        else:
+            char = prompt[len(prompt) - 1 - i]
+
+        # Independently decide whether to introduce a typo.
+        if rng.random() < p_typo:
+            char = LETTERS[rng.randrange(len(LETTERS))]
+
+        answer.append(char)
+
+    return "".join(answer)
+
+
+def make_demos(n, seed, length=4, p_copy=0.6, p_typo=0.05):
+    """n (prompt, completion) pairs from random.Random(seed)."""
+
+    # Create one seeded random-number generator for reproducibility.
+    rng = random.Random(seed)
+
+    demos = []
+
+    for _ in range(n):
+        # Generate a random prompt using the available LETTERS constant.
+        prompt = "".join(
+            LETTERS[rng.randrange(len(LETTERS))]
+            for _ in range(length)
+        )
+
+        # Generate the corresponding demonstration completion.
+        completion = write_answer(prompt, rng, p_copy, p_typo)
+
+        demos.append((prompt, completion))
+
+    return demos
 
 # Step 3 - encode_example (not yet solved)
 # TODO: implement

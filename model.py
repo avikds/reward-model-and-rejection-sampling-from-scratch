@@ -635,8 +635,34 @@ def best_of_n(model, rm, prompt, n, temperature=1.0, generator=None):
 
     return best, completions, scores
 
-# Step 13 - mean_gold_score (not yet solved)
-# TODO: implement
+# Step 13 - mean_gold_score
+def mean_gold_score(model, prompts, n=4, temperature=1.0, seed=0):
+    """Average gold score over n sampled completions for each prompt, as a Python float."""
+
+    # Create one seeded generator for the entire evaluation.
+    g = torch.Generator().manual_seed(seed)
+
+    gold_scores = []
+
+    # Process prompts in their original order.
+    for prompt in prompts:
+
+        # Sample n completions for the current prompt.
+        completions = sample_completions(
+            model,
+            prompt,
+            n,
+            temperature,
+            g
+        )
+
+        # Evaluate every completion using the ground-truth scoring rule.
+        for completion in completions:
+            score = gold_score(prompt, completion)
+            gold_scores.append(score)
+
+    # Return the average gold score as a Python float.
+    return float(sum(gold_scores) / len(gold_scores))
 
 # Step 14 - rejection_sampling (not yet solved)
 # TODO: implement

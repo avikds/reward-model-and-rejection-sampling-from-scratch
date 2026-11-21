@@ -262,8 +262,37 @@ class TinyLM(nn.Module):
 
         return logits
 
-# Step 5 - sft_loss (not yet solved)
-# TODO: implement
+# Step 5 - sft_loss
+def sft_loss(logits, ids, completion_mask):
+    """Mean next-token negative log-likelihood over the completion tokens only."""
+
+    # Shift logits and token IDs so each position predicts the next token.
+    shift_logits = logits[:, :-1, :]
+    shift_ids = ids[:, 1:]
+
+    # Shift the completion mask to align with the prediction targets.
+    shift_mask = completion_mask[:, 1:].to(
+        device=logits.device,
+        dtype=logits.dtype
+    )
+
+    # Calculate cross-entropy loss independently for each token.
+    token_losses = F.cross_entropy(
+        shift_logits.reshape(-1, shift_logits.size(-1)),
+        shift_ids.reshape(-1),
+        reduction="none"
+    )
+
+    # Restore the batch and sequence dimensions.
+    token_losses = token_losses.view_as(shift_ids)
+
+    # Count loss only for completion tokens.
+    masked_loss = token_losses * shift_mask
+
+    # Normalize by the total number of completion tokens in the batch.
+    loss = masked_loss.sum() / shift_mask.sum()
+
+    return loss
 
 # Step 6 - instruction_tune (not yet solved)
 # TODO: implement

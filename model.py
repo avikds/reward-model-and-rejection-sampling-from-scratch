@@ -294,8 +294,74 @@ def sft_loss(logits, ids, completion_mask):
 
     return loss
 
-# Step 6 - instruction_tune (not yet solved)
-# TODO: implement
+# Step 6 - instruction_tune
+def instruction_tune(model, examples, steps, batch_size=32, lr=3e-3, seed=0):
+    """AdamW on random batches of encoded examples with sft_loss; returns each step's loss as a float."""
+
+    # Encode every demonstration example exactly once.
+    encoded = [
+        encode_example(prompt, completion)
+        for prompt, completion in examples
+    ]
+
+    # Stack token IDs and completion masks into tensors.
+    ids = torch.tensor(
+        [item[0] for item in encoded],
+        dtype=torch.long
+    )
+
+    masks = torch.tensor(
+        [item[1] for item in encoded],
+        dtype=torch.long
+    )
+
+    # Create a dedicated random-number generator for reproducible batches.
+    g = torch.Generator().manual_seed(seed)
+
+    # Initialize the AdamW optimizer.
+    optimizer = torch.optim.AdamW(
+        model.parameters(),
+        lr=lr
+    )
+
+    # Set the model to training mode.
+    model.train()
+
+    losses = []
+
+    for _ in range(steps):
+
+        # Randomly sample a batch of demonstration examples.
+        ix = torch.randint(
+            0,
+            len(examples),
+            (batch_size,),
+            generator=g
+        )
+
+        # Compute next-token logits for the selected examples.
+        logits = model(ids[ix])
+
+        # Calculate loss only on completion tokens.
+        loss = sft_loss(
+            logits,
+            ids[ix],
+            masks[ix]
+        )
+
+        # Reset gradients from the previous optimization step.
+        optimizer.zero_grad()
+
+        # Backpropagate the loss.
+        loss.backward()
+
+        # Update model parameters.
+        optimizer.step()
+
+        # Record the current training loss as a Python float.
+        losses.append(loss.item())
+
+    return losses
 
 # Step 7 - make_preference_pairs (not yet solved)
 # TODO: implement

@@ -15,7 +15,7 @@ python scaffold.py
 - [x] **3.** encode_example
 - [x] **4.** TinyLM
 - [x] **5.** sft_loss
-- [ ] **6.** instruction_tune
+- [x] **6.** instruction_tune
 - [ ] **7.** make_preference_pairs
 - [ ] **8.** RewardModel
 - [ ] **9.** pairwise_loss

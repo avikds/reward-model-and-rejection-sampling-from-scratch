@@ -603,8 +603,37 @@ def sample_completions(model, prompt, n, temperature=1.0, generator=None):
 
     return completions
 
-# Step 12 - best_of_n (not yet solved)
-# TODO: implement
+# Step 12 - best_of_n
+def best_of_n(model, rm, prompt, n, temperature=1.0, generator=None):
+    """Sample n completions, score them with rm, return (best, completions, scores)."""
+
+    # Generate n candidate completions using the language model.
+    completions = sample_completions(
+        model,
+        prompt,
+        n,
+        temperature,
+        generator
+    )
+
+    # Set the reward model to evaluation mode.
+    rm.eval()
+
+    # Score all candidate completions without computing gradients.
+    with torch.no_grad():
+        scores = rm.score(
+            [prompt] * n,
+            completions
+        )
+
+    # Find the index of the highest reward.
+    # torch.argmax returns the first index in case of a tie.
+    best_idx = torch.argmax(scores).item()
+
+    # Select the completion with the highest predicted reward.
+    best = completions[best_idx]
+
+    return best, completions, scores
 
 # Step 13 - mean_gold_score (not yet solved)
 # TODO: implement

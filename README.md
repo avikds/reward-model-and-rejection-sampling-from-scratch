@@ -21,7 +21,7 @@ python scaffold.py
 - [x] **9.** pairwise_loss
 - [x] **10.** train_reward_model
 - [x] **11.** sample_completions
-- [ ] **12.** best_of_n
+- [x] **12.** best_of_n
 - [ ] **13.** mean_gold_score
 - [ ] **14.** rejection_sampling
 

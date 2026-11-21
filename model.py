@@ -363,8 +363,43 @@ def instruction_tune(model, examples, steps, batch_size=32, lr=3e-3, seed=0):
 
     return losses
 
-# Step 7 - make_preference_pairs (not yet solved)
-# TODO: implement
+# Step 7 - make_preference_pairs
+def make_preference_pairs(n, seed, length=4, p_copy=0.6, p_typo=0.05):
+    """n tuples (prompt, chosen, rejected); ties in gold score are discarded."""
+
+    # Create one seeded random-number generator.
+    rng = random.Random(seed)
+
+    pairs = []
+
+    # Continue generating until exactly n valid pairs are collected.
+    while len(pairs) < n:
+
+        # Generate a random prompt of the specified length.
+        prompt = "".join(
+            LETTERS[rng.randrange(len(LETTERS))]
+            for _ in range(length)
+        )
+
+        # Generate two independent answers to the same prompt.
+        a = write_answer(prompt, rng, p_copy, p_typo)
+        b = write_answer(prompt, rng, p_copy, p_typo)
+
+        # Evaluate both answers using the ground-truth scoring rule.
+        score_a = gold_score(prompt, a)
+        score_b = gold_score(prompt, b)
+
+        # Discard pairs where both answers have equal scores.
+        if score_a == score_b:
+            continue
+
+        # Place the better answer first.
+        if score_a > score_b:
+            pairs.append((prompt, a, b))
+        else:
+            pairs.append((prompt, b, a))
+
+    return pairs
 
 # Step 8 - RewardModel (not yet solved)
 # TODO: implement

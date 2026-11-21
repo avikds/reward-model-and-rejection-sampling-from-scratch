@@ -19,7 +19,7 @@ python scaffold.py
 - [x] **7.** make_preference_pairs
 - [x] **8.** RewardModel
 - [x] **9.** pairwise_loss
-- [ ] **10.** train_reward_model
+- [x] **10.** train_reward_model
 - [ ] **11.** sample_completions
 - [ ] **12.** best_of_n
 - [ ] **13.** mean_gold_score

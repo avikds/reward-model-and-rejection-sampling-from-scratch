@@ -481,8 +481,63 @@ def pairwise_accuracy(r_chosen, r_rejected):
     # Return the fraction of correctly ranked pairs as a Python float.
     return correct.mean().item()
 
-# Step 10 - train_reward_model (not yet solved)
-# TODO: implement
+# Step 10 - train_reward_model
+def train_reward_model(rm, pairs, steps, batch_size=64, lr=5e-3, seed=0):
+    """AdamW on random batches of pairs with pairwise_loss; returns each step's loss as a float."""
+
+    # Create a dedicated random-number generator for reproducible batch sampling.
+    g = torch.Generator().manual_seed(seed)
+
+    # Initialize the AdamW optimizer.
+    optimizer = torch.optim.AdamW(
+        rm.parameters(),
+        lr=lr
+    )
+
+    # Set the reward model to training mode.
+    rm.train()
+
+    losses = []
+
+    for _ in range(steps):
+
+        # Randomly sample preference-pair indices for the current batch.
+        ix = torch.randint(
+            0,
+            len(pairs),
+            (batch_size,),
+            generator=g
+        )
+
+        # Retrieve the selected preference pairs.
+        batch = [pairs[i] for i in ix.tolist()]
+
+        # Separate prompts, chosen completions, and rejected completions.
+        prompts = [p for p, c, r in batch]
+        chosen = [c for p, c, r in batch]
+        rejected = [r for p, c, r in batch]
+
+        # Compute reward scores for both sets of completions.
+        # Gradients must remain enabled for reward model training.
+        r_chosen = rm.score(prompts, chosen)
+        r_rejected = rm.score(prompts, rejected)
+
+        # Calculate the Bradley-Terry pairwise loss.
+        loss = pairwise_loss(r_chosen, r_rejected)
+
+        # Reset gradients before backpropagation.
+        optimizer.zero_grad()
+
+        # Calculate gradients.
+        loss.backward()
+
+        # Update reward model parameters.
+        optimizer.step()
+
+        # Record the training loss as a Python float.
+        losses.append(loss.item())
+
+    return losses
 
 # Step 11 - sample_completions (not yet solved)
 # TODO: implement

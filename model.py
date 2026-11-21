@@ -664,6 +664,48 @@ def mean_gold_score(model, prompts, n=4, temperature=1.0, seed=0):
     # Return the average gold score as a Python float.
     return float(sum(gold_scores) / len(gold_scores))
 
-# Step 14 - rejection_sampling (not yet solved)
-# TODO: implement
+# Step 14 - rejection_sampling
+import copy
+
+
+def rejection_sampling(model, rm, prompts, n=8, temperature=1.0, steps=200, batch_size=32, lr=1e-3, seed=0):
+    """Keep the best of n completions per prompt, fine-tune a copy of the model on them; returns (tuned, kept)."""
+
+    # Create one seeded random generator for reproducible sampling.
+    g = torch.Generator().manual_seed(seed)
+
+    kept = []
+
+    # Generate, score, and select the best completion for each prompt.
+    for prompt in prompts:
+
+        # Use best-of-N sampling to select the highest-reward completion.
+        best, completions, scores = best_of_n(
+            model,
+            rm,
+            prompt,
+            n,
+            temperature,
+            g
+        )
+
+        # Store the prompt and its selected completion.
+        kept.append((prompt, best))
+
+    # Create an independent copy of the original generator.
+    tuned = copy.deepcopy(model)
+
+    # Fine-tune the copied generator using the selected examples.
+    # The original model remains unchanged.
+    instruction_tune(
+        tuned,
+        kept,
+        steps=steps,
+        batch_size=batch_size,
+        lr=lr,
+        seed=seed
+    )
+
+    # Return the fine-tuned model and the selected training examples.
+    return tuned, kept
 

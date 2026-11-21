@@ -23,7 +23,7 @@ python scaffold.py
 - [x] **11.** sample_completions
 - [x] **12.** best_of_n
 - [x] **13.** mean_gold_score
-- [ ] **14.** rejection_sampling
+- [x] **14.** rejection_sampling
 
 ---
 

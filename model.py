@@ -74,8 +74,34 @@ def make_demos(n, seed, length=4, p_copy=0.6, p_typo=0.05):
 
     return demos
 
-# Step 3 - encode_example (not yet solved)
-# TODO: implement
+# Step 3 - encode_example
+# Define the character-level vocabulary.
+CHARS = LETTERS + "#:"
+
+# Map each character to its corresponding token ID.
+STOI = {char: idx for idx, char in enumerate(CHARS)}
+
+# Total number of tokens in the vocabulary.
+VOCAB_SIZE = len(CHARS)
+
+
+def encode_example(prompt, completion=""):
+    """Template text '#' + prompt + ':' + completion -> (ids, completion_mask)."""
+
+    # Construct the chat template.
+    text = "#" + prompt + ":" + completion
+
+    # Convert every character into its corresponding token ID.
+    ids = [STOI[char] for char in text]
+
+    # Prompt and chat markers are masked with 0.
+    # Only completion tokens are marked with 1.
+    completion_mask = (
+        [0] * (len(prompt) + 2)
+        + [1] * len(completion)
+    )
+
+    return ids, completion_mask
 
 # Step 4 - TinyLM (not yet solved)
 # TODO: implement

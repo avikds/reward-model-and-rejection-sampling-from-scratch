@@ -457,8 +457,29 @@ class RewardModel(nn.Module):
         # Return reward scores without disabling gradient computation.
         return self.forward(ids)
 
-# Step 9 - pairwise_loss (not yet solved)
-# TODO: implement
+# Step 9 - pairwise_loss
+def pairwise_loss(r_chosen, r_rejected):
+    """Mean of -log sigmoid(r_chosen - r_rejected)."""
+
+    # Calculate the reward difference for each preference pair.
+    reward_diff = r_chosen - r_rejected
+
+    # Use softplus for numerically stable computation:
+    # -log(sigmoid(x)) = softplus(-x).
+    losses = F.softplus(-reward_diff)
+
+    # Return the mean loss across the batch.
+    return losses.mean()
+
+
+def pairwise_accuracy(r_chosen, r_rejected):
+    """Fraction of pairs with r_chosen > r_rejected, as a Python float."""
+
+    # A pair is correct only when the chosen reward is strictly higher.
+    correct = (r_chosen > r_rejected).float()
+
+    # Return the fraction of correctly ranked pairs as a Python float.
+    return correct.mean().item()
 
 # Step 10 - train_reward_model (not yet solved)
 # TODO: implement

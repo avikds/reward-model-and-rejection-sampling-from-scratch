@@ -18,7 +18,7 @@ python scaffold.py
 - [x] **6.** instruction_tune
 - [x] **7.** make_preference_pairs
 - [x] **8.** RewardModel
-- [ ] **9.** pairwise_loss
+- [x] **9.** pairwise_loss
 - [ ] **10.** train_reward_model
 - [ ] **11.** sample_completions
 - [ ] **12.** best_of_n
